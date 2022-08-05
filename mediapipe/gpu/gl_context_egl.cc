@@ -23,6 +23,7 @@
 #include "mediapipe/framework/port/status_builder.h"
 #include "mediapipe/gpu/gl_context.h"
 #include "mediapipe/gpu/gl_context_internal.h"
+#include <EGL/eglext.h>
 
 #ifndef EGL_OPENGL_ES3_BIT_KHR
 #define EGL_OPENGL_ES3_BIT_KHR 0x00000040
@@ -72,7 +73,24 @@ static void EnsureEglThreadRelease() {
 }
 
 static absl::StatusOr<EGLDisplay> GetInitializedDefaultEglDisplay() {
-  EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  static const int MAX_DEVICES = 4;
+  EGLDeviceEXT eglDevs[MAX_DEVICES];
+  EGLint numDevices;
+  
+  PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT =
+      (PFNEGLQUERYDEVICESEXTPROC) eglGetProcAddress("eglQueryDevicesEXT");
+  
+  eglQueryDevicesEXT(MAX_DEVICES, eglDevs, &numDevices);
+
+  LOG(INFO) << "Detected devices: " << numDevices;
+  
+  PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT =
+    (PFNEGLGETPLATFORMDISPLAYEXTPROC) eglGetProcAddress("eglGetPlatformDisplayEXT");
+
+  EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, eglDevs[0], 0);
+
+  // EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  
   RET_CHECK(display != EGL_NO_DISPLAY)
       << "eglGetDisplay() returned error " << std::showbase << std::hex
       << eglGetError();
@@ -80,7 +98,7 @@ static absl::StatusOr<EGLDisplay> GetInitializedDefaultEglDisplay() {
   EGLint major = 0;
   EGLint minor = 0;
   EGLBoolean egl_initialized = eglInitialize(display, &major, &minor);
-  RET_CHECK(egl_initialized) << "Unable to initialize EGL";
+  RET_CHECK(egl_initialized) << "Unable to initialize EGL" << eglGetError();
   LOG(INFO) << "Successfully initialized EGL. Major : " << major
             << " Minor: " << minor;
 
@@ -122,11 +140,7 @@ absl::Status GlContext::CreateContextInternal(EGLContext share_context,
                                            : EGL_OPENGL_ES2_BIT,
       // Allow rendering to pixel buffers or directly to windows.
       EGL_SURFACE_TYPE,
-#ifdef MEDIAPIPE_OMIT_EGL_WINDOW_BIT
       EGL_PBUFFER_BIT,
-#else
-      EGL_PBUFFER_BIT | EGL_WINDOW_BIT,
-#endif
       EGL_RED_SIZE, 8,
       EGL_GREEN_SIZE, 8,
       EGL_BLUE_SIZE, 8,
