@@ -27,7 +27,6 @@ import os
 from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Union
 
 import numpy as np
-import cv2
 
 from google.protobuf import descriptor
 from google.protobuf import message
@@ -109,7 +108,6 @@ class PacketDataType(enum.Enum):
   AUDIO = 'matrix'
   IMAGE = 'image'
   IMAGE_FRAME = 'image_frame'
-  GPU_BUFFER = 'gpu_buffer'
   PROTO = 'proto'
   PROTO_LIST = 'proto_list'
 
@@ -148,8 +146,6 @@ NAME_TO_TYPE: Mapping[str, 'PacketDataType'] = {
         PacketDataType.AUDIO,
     '::mediapipe::ImageFrame':
         PacketDataType.IMAGE_FRAME,
-    '::mediapipe::GpuBuffer':
-        PacketDataType.GPU_BUFFER,
     '::mediapipe::Classification':
         PacketDataType.PROTO,
     '::mediapipe::ClassificationList':
@@ -296,7 +292,6 @@ class SolutionBase:
         for name, data in (side_inputs or {}).items()
     }
     self._graph.start_run(self._input_side_packets)
-    self.use_gpu = True
 
   # TODO: Use "inspect.Parameter" to fetch the input argument names and
   # types from "_input_stream_type_info" and then auto generate the process
@@ -362,14 +357,6 @@ class SolutionBase:
           stream=stream_name,
           packet=self._make_packet(input_stream_type,
                                     data).at(self._simulated_timestamp))
-      elif (input_stream_type == PacketDataType.GPU_BUFFER):
-          data = cv2.cvtColor(data, cv2.COLOR_RGB2RGBA)
-          # if data.shape[2] != RGB_CHANNELS:
-          #   raise ValueError('Input image must contain three channel rgb data.')
-          self._graph.add_input_frame_as_a_gpu_buffer_to_input_stream(
-              stream=stream_name,
-              input_frame=image_frame.ImageFrame(image_frame.ImageFormat.SRGBA, data),
-              timestamp=self._simulated_timestamp)    
       else:
         self._graph.add_packet_to_input_stream(
             stream=stream_name,
