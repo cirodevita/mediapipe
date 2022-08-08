@@ -16,6 +16,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -90,6 +92,10 @@ class InferenceCalculatorGlImpl
 
 absl::Status InferenceCalculatorGlImpl::UpdateContract(CalculatorContract* cc) {
   const auto& options = cc->Options<::mediapipe::InferenceCalculatorOptions>();
+  //char buff[FILENAME_MAX];
+  //getcwd(buff, FILENAME_MAX);
+  //std::string current_working_dir(buff);
+  //auto model_path = current_working_dir + "/" + options.model_path();
   RET_CHECK(!options.model_path().empty() ^ kSideInModel(cc).IsConnected())
       << "Either model as side packet or model path in options is required.";
 

@@ -40,9 +40,11 @@ from mediapipe.framework.formats import detection_pb2
 from mediapipe.calculators.core import constant_side_packet_calculator_pb2
 from mediapipe.calculators.image import image_transformation_calculator_pb2
 from mediapipe.calculators.tensor import tensors_to_detections_calculator_pb2
+from mediapipe.calculators.tflite import tflite_tensors_to_detections_calculator_pb2
 from mediapipe.calculators.util import landmarks_smoothing_calculator_pb2
 from mediapipe.calculators.util import logic_calculator_pb2
 from mediapipe.calculators.util import thresholding_calculator_pb2
+from mediapipe.calculators.util import non_max_suppression_calculator_pb2
 from mediapipe.framework.formats import classification_pb2
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe.framework.formats import rect_pb2
@@ -77,6 +79,12 @@ CALCULATOR_TO_OPTIONS = {
     'Lift2DFrameAnnotationTo3DCalculator':
         lift_2d_frame_annotation_to_3d_calculator_pb2
         .Lift2DFrameAnnotationTo3DCalculatorOptions,
+    'TfLiteTensorsToDetectionsCalculator':
+        tflite_tensors_to_detections_calculator_pb2
+        .TfLiteTensorsToDetectionsCalculatorOptions,
+    'NonMaxSuppressionCalculator':
+        non_max_suppression_calculator_pb2
+        .NonMaxSuppressionCalculatorOptions,
 }
 
 
@@ -261,6 +269,7 @@ class SolutionBase:
     resource_util.set_resource_dir(root_path)
     validated_graph = validated_graph_config.ValidatedGraphConfig()
     if binary_graph_path:
+      print(os.path.join(root_path, binary_graph_path))
       validated_graph.initialize(
           binary_graph_path=os.path.join(root_path, binary_graph_path))
     else:

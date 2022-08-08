@@ -221,7 +221,9 @@ class BuildBinaryGraphs(build_ext.build_ext):
         'face_detection/face_detection_full_range_gpu',
         'face_landmark/face_landmark_front_gpu',
         'hand_landmark/hand_landmark_tracking_gpu',
-        'holistic_landmark/holistic_landmark_gpu', 'objectron/objectron_gpu',
+        'holistic_landmark/holistic_landmark_gpu',
+        'object_detection/object_detection_cpu',
+        'objectron/objectron_gpu',
         'pose_landmark/pose_landmark_gpu',
         'selfie_segmentation/selfie_segmentation_gpu'
     ]
