@@ -363,6 +363,8 @@ class SolutionBase:
           packet=self._make_packet(input_stream_type,
                                     data).at(self._simulated_timestamp))
       elif (input_stream_type == PacketDataType.GPU_BUFFER):
+          if data is None:
+            continue
           data = cv2.cvtColor(data, cv2.COLOR_RGB2RGBA)
           # if data.shape[2] != RGB_CHANNELS:
           #   raise ValueError('Input image must contain three channel rgb data.')
